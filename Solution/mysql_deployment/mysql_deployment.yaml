@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deploy
+  labels:
+    name: mysql-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: mysql-pod
+  template:
+    metadata:
+      name: mysql-pod
+      labels:
+        name: mysql-pod
+    spec:
+      containers:
+      - image: mysql:5.7
+        name: mysql
+        imagePullPolicy: Always #https://kubernetes.io/docs/concepts/configuration/overview/
+        env:
+        - name: MYSQL_PASSWORD
+          #value: Clarusway_1
+          valueFrom:
+           secretKeyRef:
+            name: mysql-secret
+            key: mysql_admin_password
+        - name: MYSQL_ROOT_PASSWORD
+          # value: J12345j
+          valueFrom:
+           secretKeyRef:
+            name: mysql-secret
+            key: mysql_root_password
+        - name: MYSQL_USER
+          # value: clarus
+         valueFrom:
+           configMapKeyRef:
+            name: mysql-config
+            key: MYSQL_USER
+        - name: MYSQL_DATABASE
+          # value: phonebook
+          valueFrom:
+           configMapKeyRef:
+            name: mysql-secret
+            key: MYSQL_DATABASE
+        resources: {}
+        volumeMounts:
+        - name: mysql-persistent-volume
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-volume
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
